@@ -25,7 +25,7 @@ try:
     app = Bottle()
 
     # Board posts store in a Dictionary
-    board = dict() 
+    board = {} 
 
     # Each post entry gets a sequence number
     new_id = 1
@@ -52,7 +52,7 @@ try:
 
         print "The modified entry is " + str(modified_element)
         try:
-            board[entry_sequence] = modified_element
+            board[int(entry_sequence)] = modified_element
             success = True
         except Exception as e:
             print e
@@ -64,7 +64,7 @@ try:
 
         print "Delete!!"
         try:
-            del board[entry_sequence]
+            del board[int(entry_sequence)]
             # board.pop(entry_sequence)
             success = True
         except Exception as e:
