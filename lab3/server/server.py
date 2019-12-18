@@ -58,7 +58,7 @@ try:
         success = False
         try:
 
-            #In the case where there allready is a entry at the sequence number, we will compare the two time_stamps for 
+            #In the case where there already has an entry at the sequence number, we will compare the two time_stamps for 
             #when the entry was first recieved. In the case where the new entry actuallly should be in front of the old one
             #we try adding the old element at the next spot using add_new_element_to_store. Then we modify the entry at the
             #sequence number to the new value. In the case where the next spot also is occupied the function might call
@@ -75,7 +75,7 @@ try:
                     add_new_element_to_store(int(entry_sequence)+1, old_entry.entry, old_entry.node_id, old_entry.time, True)
                     modify_element_in_store(int(entry_sequence), element, date_new)
 
-                    #We also wan´t to make sure to change the entry information stored in the entrys_in_board dict when then new
+                    #We also want to make sure to change the entry information stored in the entrys_in_board dict when then new
                     #entry took the spot. 
                     entrys_in_board[int(entry_sequence)] = Entry("add", entry_sequence, from_node, time_stamp, element)
 
@@ -128,6 +128,8 @@ try:
         entrys_in_board[int(entry_sequence)].status = "removed"
         return success
 
+ 
+
     # ------------------------------------------------------------------------------------------------------
     # DISTRIBUTED COMMUNICATIONS FUNCTIONS
     # ------------------------------------------------------------------------------------------------------
@@ -135,10 +137,11 @@ try:
         # Try to contact another server (vessel) through a POST or GET, once
         success = False
         try:
+            url = 'http://{}{}'.format(vessel_ip, path)
             if 'POST' in req:
-                res = requests.post('http://{}{}'.format(vessel_ip, path), data=payload)
+                res = requests.post(url, data=payload, timeout=(3, 1))
             elif 'GET' in req:
-                res = requests.get('http://{}{}'.format(vessel_ip, path))
+                res = requests.post(url, timeout=(3, 1))
             else:
                 print 'Non implemented feature!'
                 res = 0
@@ -158,7 +161,21 @@ try:
             if int(vessel_id) != node_id: # don't propagate to yourself
                 success = contact_vessel(vessel_ip, path, payload, req)
                 if not success:
-                    print "\n\nCould not contact vessel {}\n\n".format(vessel_id)
+                    #print "\n\nCould not contact vessel {}\n\n".format(vessel_id)
+                    thread = Thread(target=retry_req, args=(vessel_ip, path, payload, req))
+                    thread.daemon = True
+                    thread.start()
+
+    def retry_req(vessel_ip, path, payload, req='POST'):
+        max_time = 30
+        sleep = 1
+        success = False
+        while not success:
+            print("\nCould not contact vessel {}. Try again in {} seconds ...".format(vessel_ip, sleep))
+            time.sleep(sleep)
+            success = contact_vessel(vessel_ip, path, payload, req)
+            sleep = min(sleep * 2, max_time)
+
 
     #Method that creates separete threads when propagating to all other vessels.
     def propagate_to_all_vessels(path, payload=None, req='POST'):
@@ -192,7 +209,7 @@ try:
 
             propagate_to_all_vessels("/propagate/add/{}/{}".format(sequence_number, node_id), {"entry": new_entry, "time": time_stamp })
             handle_action_recieved("add", sequence_number, node_id, new_entry, time_stamp)
-     
+            
             return True
         except Exception as e:
             print e
