@@ -75,7 +75,7 @@ class Lab1Topology( Topo ):
 
 #------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------
-# Lab1 - class running the Mininet environment and launching the servers
+# Lab3 - class running the Mininet environment and launching the servers
 class Lab():
 #------------------------------------------------------------------------------------------------------
     def __init__(self, nbOfServersPerRegion, nbOfClientsPerRegion, nbOfRegions, pathToServer):
@@ -114,7 +114,6 @@ class Lab():
             if "vessel" in server.name:
                 # We open a xterm and start the server
                 self.startServer(server)
-        makeTerm(node=simulation.getNodeByName("client1"), cmd="firefox")
         # We also start the Command Line Interface of Mininet
         CLI(simulation)
         # Once the CLI is closed (with exit), we can stop the simulation
